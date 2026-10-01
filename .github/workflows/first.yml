@@ -78,4 +78,4 @@ jobs:
         run: npm install --global vercel
 
       - name: "Deploy to vercel"
-        run: vercel --prod --yes --token="${{ secrects.VERCEL_TOKEN }}"
+        run: vercel --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
