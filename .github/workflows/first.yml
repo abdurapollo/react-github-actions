@@ -66,3 +66,16 @@ jobs:
           name: react-build
           path: dist/
           retention-days: 7
+
+  deploy_job:
+    needs: [lint_job, test_job, build_job]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: "Install vercel cli"
+        run: npm install --global vercel
+
+      - name: "Deploy to vercel"
+        run: vercel --prod --yes --token="${{ secrects.VERCEL_TOKEN }}"
