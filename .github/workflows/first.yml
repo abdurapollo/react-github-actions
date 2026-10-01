@@ -1,11 +1,55 @@
 name: "first workflow"
-on: push
+on: 
+  push:
+  pull_request:
+    branches:
+      - main
 jobs:
-  first_job:
+  lint_job:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v4
+
+      - name: "setup node js in VM"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: run ESLint on APP
+        run: npm run lint
+  
+  test_job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: "setup node js in VM"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: install dependencies
+        run: npm ci
+
+      - name: run tests cases
+        run: npm run test
+
+  build_job:
+    needs: [lint_job, test_job]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: "setup node js in VM"
+        uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
@@ -15,3 +59,23 @@ jobs:
 
       - name: make react build
         run: npm run build
+
+      - name: create artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-build
+          path: dist/
+          retention-days: 7
+
+  deploy_job:
+    needs: [lint_job, test_job, build_job]
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: "Install vercel cli"
+        run: npm install --global vercel
+
+      - name: "Deploy to vercel"
+        run: vercel --prod --yes --token="${{ secrets.VERCEL_TOKEN }}"
